@@ -1,5 +1,5 @@
 const express = require('express');
-const pool = require('../db'); // Database connection
+const { getPool } = require('../config/db'); // Database connection
 const router = express.Router();
 
 // CREATE Property
@@ -16,14 +16,14 @@ router.post('/', async (req, res) => {
       state,
       district,
       country,
-      currency, is_saved
+      currency, is_saved, sub_outlet
     } = req.body;
-
+    const pool = getPool(req);
     const result = await pool.query(
       `INSERT INTO properties 
        (property_id, property_name, address, contact_number, email, business_hours, 
-        tax_reg_no, state, district, country, currency, is_saved) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
+        tax_reg_no, state, district, country, currency, is_saved, sub_outlet) 
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
        RETURNING *`,
       [
         property_id,
@@ -37,7 +37,7 @@ router.post('/', async (req, res) => {
         district,
         country,
         currency,
-        is_saved
+        is_saved, sub_outlet
       ]
     );
 
@@ -51,6 +51,8 @@ router.post('/', async (req, res) => {
 // GET All Properties
 router.get('/', async (req, res) => {
   try {
+    const pool = getPool(req);
+
     const result = await pool.query('SELECT * FROM properties ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (err) {
@@ -63,7 +65,7 @@ router.get('/', async (req, res) => {
 router.get('/:property_id', async (req, res) => {
   try {
     const { property_id } = req.params;
-
+    const pool = getPool(req);
     const result = await pool.query('SELECT * FROM properties WHERE property_id = $1', [
       property_id,
     ]);
@@ -95,7 +97,7 @@ router.put('/:property_id', async (req, res) => {
       country,
       currency,
     } = req.body;
-
+    const pool = getPool(req);
     const result = await pool.query(
       `UPDATE properties 
        SET property_name = $1, address = $2, contact_number = $3, email = $4, 
@@ -133,7 +135,7 @@ router.put('/:property_id', async (req, res) => {
 router.delete('/:property_id', async (req, res) => {
   try {
     const { property_id } = req.params;
-
+    const pool = getPool(req);
     const result = await pool.query('DELETE FROM properties WHERE property_id = $1 RETURNING *', [
       property_id,
     ]);
